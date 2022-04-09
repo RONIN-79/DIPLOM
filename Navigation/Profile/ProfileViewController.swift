@@ -7,137 +7,82 @@
 
 import UIKit
 
-class ProfileViewController: UIViewController {
+class ProfileViewController: UIViewController, ChangeLikesDelegate, ChangeViewsDelegate {
+    
+    let headerView = ProfileHeaderView()
+    
+    private var dataSource: [Post] = []
+    private var headerHeight: CGFloat = 220
+    private var likesCount = 0
+    private var heightConstraint: NSLayoutConstraint?
     
     private lazy var profileHeaderView: ProfileHeaderView = {
-        let profileHearderView = ProfileHeaderView(frame: .zero)
-        profileHearderView.translatesAutoresizingMaskIntoConstraints = false
-        profileHearderView.backgroundColor = .lightGray
-        return profileHearderView
-    }()
-    
-    private lazy var setTitleButton: UIButton = {
-        let button = UIButton()
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle("Установить заголовок", for: .normal)
-        button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = .systemBlue
-        button.layer.cornerRadius = 4
-        button.addTarget(self, action: #selector(didTapSetTitleButton), for: .touchUpInside)
-        return button
+        let view = ProfileHeaderView(frame: .zero)
+        view.toAutoLayout()
+        return view
     }()
     
     private lazy var tableView: UITableView = {
-        let tableView = UITableView()
-        tableView.translatesAutoresizingMaskIntoConstraints = false
+        let tableView = UITableView(frame: .zero, style: .grouped)
+        tableView.toAutoLayout()
         tableView.dataSource = self
         tableView.delegate = self
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "DefaultCell")
         tableView.register(PostTableViewCell.self, forCellReuseIdentifier: "ArticleCell")
+        tableView.register(PhotosTableViewCell.self, forCellReuseIdentifier: "PhotosTableViewCell")
         tableView.backgroundColor = .clear
         tableView.backgroundColor = .systemGray6
         tableView.layer.borderColor = UIColor.lightGray.cgColor
         tableView.layer.borderWidth = 0.5
         return tableView
     }()
-    
-    private var heightConstraint: NSLayoutConstraint?
-    
-    private var dataSource: [Post] = []
-
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "Профиль"
-        view.addSubview(profileHeaderView)
-        profileHeaderViewSetup()
-        setTitleButtonSetup()
+
         setupTableView()
         addDataSource()
-        print(dataSource.count)
-
-
-        // Do any additional setup after loading the view.
     }
     
-    private func profileHeaderViewSetup() {
-        self.view.backgroundColor = .white
-        self.view.addSubview(self.profileHeaderView)
-       // self.view.addSubview(setTitleButton)
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.navigationBar.isHidden = true
         
-        let topConstraint = self.profileHeaderView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor)
-        let leadingConstraint = self.profileHeaderView.leadingAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.leadingAnchor)
-        let trailingConstraint = self.profileHeaderView.trailingAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.trailingAnchor)
-        self.heightConstraint = self.profileHeaderView.heightAnchor.constraint(equalToConstant: 220)
-        
-        NSLayoutConstraint.activate([
-            topConstraint,
-            leadingConstraint,
-            trailingConstraint,
-            self.heightConstraint
-        ].compactMap({$0}))
     }
     
-    private func setTitleButtonSetup() {
-        self.view.addSubview(setTitleButton)
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
         
-        let setTitleButtonHeightConstraint = self.setTitleButton.heightAnchor.constraint(equalToConstant: 50)
-        let setTitleButtonBottomConstraint = self.setTitleButton.bottomAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.bottomAnchor)
-        let setTitleButtonLeadingConstraint = self.setTitleButton.leadingAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.leadingAnchor)
-        let setTitleButtonTrailingConstraint = self.setTitleButton.trailingAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.trailingAnchor)
-        
-        NSLayoutConstraint.activate([
-            setTitleButtonHeightConstraint,
-            setTitleButtonBottomConstraint,
-            setTitleButtonLeadingConstraint,
-            setTitleButtonTrailingConstraint
-        ])
+        navigationController?.navigationBar.isHidden = true
     }
     
     private func setupTableView() {
         self.view.addSubview(self.tableView)
         
-        let tableViewTopConstraint = self.tableView.topAnchor.constraint(equalTo: self.profileHeaderView.bottomAnchor)
-        let tableViewBottomConstraint = self.tableView.bottomAnchor.constraint(equalTo: self.setTitleButton.topAnchor)
-        let tableViewLeadingConstraint = self.tableView.leadingAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.leadingAnchor, constant: 10)
-        let tableViewTrailingConstraint = self.tableView.trailingAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.trailingAnchor, constant: -10)
-        
         NSLayoutConstraint.activate([
-            tableViewTopConstraint,
-            tableViewBottomConstraint,
-            tableViewLeadingConstraint,
-            tableViewTrailingConstraint
+            self.tableView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor),
+            self.tableView.bottomAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.bottomAnchor),
+            self.tableView.leadingAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.leadingAnchor, constant: 10),
+            self.tableView.trailingAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.trailingAnchor, constant: -10)
         ])
 
     }
     
     private func addDataSource() {
-        self.dataSource.append(.init(author: "ОБМЕН", description: "Обмен газа на недвижимость", image: "Pic1", likes: 25, views: 30))
-        self.dataSource.append(.init(author: "McDonalds", description: "Ребрендинг Макдональдса", image: "Pic2", likes: 23, views: 28))
-        self.dataSource.append(.init(author: "ЗДОРОВЬЕ!", description: "С уходом иностранных компаний, мы точно будем здоровыми", image: "Pic3", likes: 15, views: 18))
-        self.dataSource.append(.init(author: "McDonalds-2", description: "Ребрендинг Макдональдса часть 2", image: "Pic4", likes: 30, views: 30))
+        self.dataSource.append(post1)
+        self.dataSource.append(post2)
+        self.dataSource.append(post3)
+        
     }
     
-    @objc func didTapSetTitleButton() {
-        let ac = UIAlertController(title: "Установить заголовок", message: "Ввести новый заголовок", preferredStyle: .alert)
-        ac.addTextField()
-        
-        let okAction = UIAlertAction(title: "Ок", style: .default) { [weak self, weak ac] _ in
-            guard let newTitle = ac?.textFields?[0].text else {return}
-            if newTitle.isEmpty {
-                let ac = UIAlertController(title: "Введите что-нибудь", message: nil, preferredStyle: .alert)
-                let okAction = UIAlertAction(title: "Ок", style: .default, handler: nil)
-                ac.addAction(okAction)
-                self?.present(ac, animated: true)
-            }
-            self?.profileHeaderView.changeTitle(title: newTitle)
-        }
-        ac.addAction(okAction)
-        
-        let cancelAction = UIAlertAction(title: "Отмена", style: .cancel, handler: nil)
-        ac.addAction(cancelAction)
-        
-        present(ac, animated: true)
+    func viewsChanged(at indexPath: IndexPath) {
+        dataSource[indexPath.row - 1].views += 1
+        self.tableView.reloadData()
+    }
+    
+    func likesChanged() {
+        likesCount += 1
+        self.tableView.reloadData()
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -149,40 +94,81 @@ class ProfileViewController: UIViewController {
 extension ProfileViewController: UITableViewDataSource, UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return self.dataSource.count
+        return self.dataSource.count + 1
     }
             
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: "ArticleCell", for: indexPath) as? PostTableViewCell else {
-            let cell = tableView.dequeueReusableCell(withIdentifier: "DefaultCell", for: indexPath)
+        if indexPath.row == 0 {
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: "PhotosTableViewCell", for: indexPath) as? PhotosTableViewCell else {
+                let cell = tableView.dequeueReusableCell(withIdentifier: "DefaultCell", for: indexPath)
+                return cell
+            }
+            return cell
+        } else {
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: "ArticleCell", for: indexPath) as? PostTableViewCell else {
+                let cell = tableView.dequeueReusableCell(withIdentifier: "DefaultCell", for: indexPath)
+                return cell
+            }
+            cell.likesDelegate = self
+            let article = self.dataSource[indexPath.row - 1]
+            let likes = article.likes + likesCount
+            self.dataSource[indexPath.row - 1].likes = likes
+            let viewModel = PostTableViewCell.ViewModel(author: article.author,
+                                                        image: article.image,
+                                                        description: article.description,
+                                                        likes: likes,
+                                                        views: article.views,
+                                                        isLiked: article.isLiked,
+                                                        isViewed: article.isViewed)
+            cell.setup(with: viewModel)
+            likesCount = 0
             return cell
         }
-        let article = self.dataSource[indexPath.row]
-        let viewModel = PostTableViewCell.ViewModel(author: article.author,
-                                                    image: article.image,
-                                                    description: article.description,
-                                                    likes: article.likes,
-                                                    views: article.views)
-        cell.setup(with: viewModel)
-        return cell
+    }
+    
+    func tableView( _ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        if indexPath.row == 0 {
+        self.navigationController?.pushViewController(PhotosViewController(), animated: true)
+        } else {
+            let vc = DetailPostViewController()
+            vc.author = dataSource[indexPath.row - 1].author
+            vc.descriptionText = dataSource[indexPath.row - 1].description
+            vc.image = dataSource[indexPath.row - 1].image
+            vc.likes = dataSource[indexPath.row - 1].likes
+            vc.views = dataSource[indexPath.row - 1].views
+            vc.index = indexPath
+            vc.isViewed = dataSource[indexPath.row - 1].isViewed
+            if !dataSource[indexPath.row - 1].isViewed {
+                viewsChanged(at: indexPath)
+            }
+            navigationController?.pushViewController(vc, animated: true)
+            dataSource[indexPath.row - 1].isViewed = true
+        }
+    }
+    
+    func tableView(_ tableView: UITableView, editingStyleForRowAt indexPath: IndexPath) -> UITableViewCell.EditingStyle {
+        if indexPath.row != 0 {
+            return .delete
+        }
+        return .none
+    }
+    
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete {
+            dataSource.remove(at: indexPath.row - 1)
+            tableView.deleteRows(at: [indexPath], with: .fade)
+        }
+    }
+    
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        var headerView = UIView()
+        if section == 0 {
+            headerView = ProfileHeaderView()
+        }
+        return headerView
+    }
+    
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        return  headerHeight
     }
 }
-
-
-
-
-
-    
-
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
-
