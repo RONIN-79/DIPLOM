@@ -59,6 +59,7 @@ class ProfileHeaderView: UIView, UITextFieldDelegate {
     private lazy var statusTextField: UITextField = {
         let textField = UITextField()
         textField.toAutoLayout()
+        textField.placeholder = "Введите что-нибудь"
         textField.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         textField.textColor = .black
         textField.layer.cornerRadius = 12
@@ -154,5 +155,6 @@ class ProfileHeaderView: UIView, UITextFieldDelegate {
             self.statusLabel.text = self.statusText
         }
         self.statusTextField.text = ""
-    }    
+        self.statusTextField.shake()
+    }
 }
